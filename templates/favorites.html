@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorites - StreamFlix</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dark-theme favorites-page">
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <img src="/static/img/logo.png" alt="StreamFlix Logo">
+                    <h1>StreamFlix</h1>
+                </div>
+                <div id="nav-links">
+                    <a href="/index.html">Home</a>
+                    <a href="/dashboard.html">Dashboard</a>
+                    <a href="/upload.html">Upload</a>
+                </div>
+                <div class="user-section" id="user-section">
+                    <span id="user-name"></span>
+                    <div class="dropdown">
+                        <button class="dropdown-btn">Menu</button>
+                        <div class="dropdown-content">
+                            <a href="/profile.html">Profile</a>
+                            <a href="#" id="logout-btn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="favorites-container container">
+        <h2 class="section-title">Your Favorites</h2>
+        <div id="favorites-grid" class="movies-grid">
+            <!-- Favorite movies will be loaded here -->
+        </div>
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <p>No favorites yet. Start adding movies to see them here!</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 StreamFlix. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/redirect.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Set username
+            const userData = JSON.parse(localStorage.getItem('user'));
+            if (userData) {
+                document.getElementById('user-name').textContent = userData.name;
+            }
+            
+            // Load favorite movies
+            fetch('/api/favorites', {
+                headers: {
+                    'x-access-token': token
+                }
+            })
+            .then(response => response.json())
+            .then(favorites => {
+                const container = document.getElementById('favorites-grid');
+                const emptyState = document.getElementById('empty-state');
+                
+                if (favorites.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                favorites.forEach(favorite => {
+                    const card = document.createElement('div');
+                    card.className = 'movie-card';
+                    card.innerHTML = `
+                        <button class="remove-btn" data-favorite-id="${favorite.id}">×</button>
+                        <img src="${favorite.posterUrl}" alt="${favorite.title}" class="movie-poster" 
+                             onclick="window.location.href='/movie.html?id=${favorite.movieId}'">
+                        <div class="movie-info">
+                            <h3 class="movie-title">${favorite.title}</h3>
+                            <div class="movie-meta">
+                                <span>${favorite.year}</span>
+                                <span>${Math.floor(favorite.duration / 60)} min</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                // Add event listeners to remove buttons
+                document.querySelectorAll('.remove-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const favoriteId = button.dataset.favoriteId;
+                        
+                        fetch(`/api/favorites/${favoriteId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-access-token': token
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                button.parentElement.remove();
+                                if (container.children.length === 0) {
+                                    emptyState.style.display = 'block';
+                                }
+                            }
+                        });
+                    });
+                });
+            }).catch(err => {
+                console.error('Error loading favorites:', err);
+                document.getElementById('favorites-grid').innerHTML = 
+                    '<p class="error-message">Failed to load favorites.</p>';
+            });
+        });
+    </script>
+</body>
+</html>

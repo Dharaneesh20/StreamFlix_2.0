@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFlix - Stream Your Favorite Movies</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dark-theme home-page">
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="/static/img/logo.png" alt="StreamFlix Logo">
+                <h1>StreamFlix</h1>
+            </div>
+            <nav id="nav-links">
+                <a href="/login.html">Login</a>
+                <a href="/register.html">Register</a>
+            </nav>
+            <div class="user-section" id="user-section" style="display: none;">
+                <span id="user-name"></span>
+                <div class="dropdown">
+                    <button class="dropdown-btn">Menu</button>
+                    <div class="dropdown-content">
+                        <a href="/dashboard.html">Dashboard</a>
+                        <a href="/profile.html">Profile</a>
+                        <a href="/favorites.html">Favorites</a>
+                        <a href="/upload.html">Upload Movie</a>
+                        <a href="#" id="logout-btn">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <h2>Unlimited Movies, TV Shows, and more.</h2>
+                <p>Watch anywhere. Cancel anytime.</p>
+                <a href="/register.html" class="btn btn-primary">Get Started</a>
+            </div>
+        </section>
+
+        <!-- Movie List Section -->
+        <section class="movie-list">
+            <div class="container">
+                <h2 class="section-title">Popular Movies</h2>
+                <div id="movies-container" class="movies-grid"></div>
+            </div>
+        </section>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="container">
+                <h2 class="section-title">Search Movies</h2>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search for movies...">
+                    <button id="search-btn">Search</button>
+                </div>
+                <div id="search-results" class="movies-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 StreamFlix. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/redirect.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

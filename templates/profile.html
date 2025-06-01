@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - StreamFlix</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dark-theme profile-page">
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <img src="/static/img/logo.png" alt="StreamFlix Logo">
+                    <h1>StreamFlix</h1>
+                </div>
+                <div id="nav-links">
+                    <a href="/index.html">Home</a>
+                    <a href="/dashboard.html">Dashboard</a>
+                    <a href="/favorites.html">Favorites</a>
+                    <a href="/upload.html">Upload</a>
+                </div>
+                <div class="user-section" id="user-section">
+                    <span id="user-name"></span>
+                    <div class="dropdown">
+                        <button class="dropdown-btn">Menu</button>
+                        <div class="dropdown-content">
+                            <a href="/profile.html">Profile</a>
+                            <a href="#" id="logout-btn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="profile-container">
+            <div class="profile-sidebar">
+                <div class="profile-avatar" id="profile-avatar">
+                    <!-- Avatar will be generated from initials -->
+                </div>
+                <h2 class="profile-name" id="profile-name">Loading...</h2>
+                <p class="profile-email" id="profile-email">Loading...</p>
+                
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="uploads-count">0</div>
+                        <div class="stat-label">Uploads</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="favorites-count">0</div>
+                        <div class="stat-label">Favorites</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="views-count">0</div>
+                        <div class="stat-label">Views</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="change-password-btn" style="width: 100%; margin-top: 20px;">
+                    Change Password
+                </button>
+            </div>
+            
+            <div class="profile-content">
+                <h2 class="section-title">Profile Information</h2>
+                
+                <form class="profile-form" id="profile-form">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="join-date">Member Since</label>
+                        <input type="text" id="join-date" name="join-date" disabled>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+                
+                <div class="recent-activity">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <div id="activity-list">
+                        <!-- Activity items will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 StreamFlix. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/redirect.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Set username in header
+            const userData = JSON.parse(localStorage.getItem('user'));
+            if (userData) {
+                document.getElementById('user-name').textContent = userData.name;
+                
+                // Set profile information
+                document.getElementById('profile-name').textContent = userData.name;
+                document.getElementById('profile-email').textContent = userData.email;
+                document.getElementById('name').value = userData.name;
+                document.getElementById('email').value = userData.email;
+                document.getElementById('join-date').value = new Date(userData.createdAt).toLocaleDateString();
+                
+                // Generate avatar from initials
+                const initials = userData.name.split(' ').map(n => n[0]).join('').toUpperCase();
+                document.getElementById('profile-avatar').textContent = initials;
+            }
+            
+            // Fetch user stats
+            fetch('/api/user/uploads', {
+                headers: {
+                    'x-access-token': token
+                }
+            })
+            .then(response => response.json())
+            .then(uploads => {
+                document.getElementById('uploads-count').textContent = uploads.length;
+                
+                // Calculate total views
+                const totalViews = uploads.reduce((sum, movie) => sum + movie.views, 0);
+                document.getElementById('views-count').textContent = totalViews;
+            });
+            
+            // Fetch favorites count
+            fetch('/api/favorites', {
+                headers: {
+                    'x-access-token': token
+                }
+            })
+            .then(response => response.json())
+            .then(favorites => {
+                document.getElementById('favorites-count').textContent = favorites.length;
+            });
+            
+            // Fetch recent activity (watch history)
+            fetch('/api/watch-history', {
+                headers: {
+                    'x-access-token': token
+                }
+            })
+            .then(response => response.json())
+            .then(history => {
+                const activityList = document.getElementById('activity-list');
+                history.slice(0, 5).forEach(item => {
+                    const progressPercent = Math.round(item.progress * 100);
+                    const watchedDate = new Date(item.watchDate).toLocaleDateString();
+                    
+                    activityList.innerHTML += `
+                        <div class="activity-item">
+                            <img src="${item.posterUrl}" alt="${item.title}" class="activity-poster">
+                            <div class="activity-info">
+                                <div class="activity-title">${item.title}</div>
+                                <div class="activity-meta">
+                                    <span>Watched ${watchedDate}</span>
+                                    <span>${progressPercent}% watched</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            
+            // Handle profile form submission
+            document.getElementById('profile-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('name').value;
+                
+                fetch('/api/user/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    },
+                    body: JSON.stringify({ name })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Profile updated successfully') {
+                        alert('Profile updated successfully');
+                        
+                        // Update local storage and UI
+                        const userData = JSON.parse(localStorage.getItem('user'));
+                        userData.name = name;
+                        localStorage.setItem('user', JSON.stringify(userData));
+                        
+                        document.getElementById('profile-name').textContent = name;
+                        document.getElementById('user-name').textContent = name;
+                    } else {
+                        alert('Failed to update profile');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to update profile');
+                });
+            });
+            
+            // Handle change password button
+            document.getElementById('change-password-btn').addEventListener('click', function() {
+                const currentPassword = prompt('Enter your current password:');
+                if (!currentPassword) return;
+                
+                const newPassword = prompt('Enter your new password:');
+                if (!newPassword) return;
+                
+                const confirmPassword = prompt('Confirm your new password:');
+                if (newPassword !== confirmPassword) {
+                    alert("Passwords don't match!");
+                    return;
+                }
+                
+                fetch('/api/user/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Password changed successfully') {
+                        alert('Password changed successfully');
+                    } else {
+                        alert(data.message || 'Failed to change password');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to change password');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

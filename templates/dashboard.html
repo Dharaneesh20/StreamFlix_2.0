@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - StreamFlix</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dark-theme dashboard-page">
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <img src="/static/img/logo.png" alt="StreamFlix Logo">
+                    <h1>StreamFlix</h1>
+                </div>
+                <div id="nav-links">
+                    <a href="/index.html">Home</a>
+                    <a href="/favorites.html">Favorites</a>
+                    <a href="/upload.html">Upload</a>
+                </div>
+                <div class="user-section" id="user-section">
+                    <span id="user-name"></span>
+                    <div class="dropdown">
+                        <button class="dropdown-btn">Menu</button>
+                        <div class="dropdown-content">
+                            <a href="/profile.html">Profile</a>
+                            <a href="#" id="logout-btn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="dashboard-content container">
+        <!-- Continue Watching Section -->
+        <section>
+            <h2 class="section-title">Continue Watching</h2>
+            <div id="continue-watching" class="movies-grid"></div>
+        </section>
+        
+        <!-- Recently Added Section -->
+        <section>
+            <h2 class="section-title">Recently Added</h2>
+            <div id="recent-movies" class="movies-grid"></div>
+        </section>
+        
+        <!-- User Uploads Section -->
+        <section>
+            <h2 class="section-title">Your Uploads</h2>
+            <div id="user-uploads" class="movies-grid"></div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 StreamFlix. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/redirect.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Set username
+            const userData = JSON.parse(localStorage.getItem('user'));
+            if (userData) {
+                document.getElementById('user-name').textContent = userData.name;
+            }
+            
+            // Load continue watching
+            fetch('/api/watch-history', {
+                headers: {
+                    'x-access-token': token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('continue-watching');
+                if (data.length === 0) {
+                    container.innerHTML = '<p class="empty-state">No watch history yet. Start watching movies!</p>';
+                    return;
+                }
+                
+                data.slice(0, 5).forEach(movie => {
+                    const progressPercent = Math.round(movie.progress * 100);
+                    container.innerHTML += `
+                        <div class="movie-card" onclick="window.location.href='/movie.html?id=${movie.movieId}'">
+                            <img src="${movie.posterUrl}" alt="${movie.title}" class="movie-poster">
+                            <div class="movie-info">
+                                <h3 class="movie-title">${movie.title}</h3>
+                                <div class="movie-meta">
+                                    <span>${movie.year}</span>
+                                    <span>${Math.floor(movie.duration / 60)} min</span>
+                                </div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: ${progressPercent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }).catch(err => {
+                console.error('Error loading watch history:', err);
+                document.getElementById('continue-watching').innerHTML = 
+                    '<p class="error-message">Failed to load watch history.</p>';
+            });
+            
+            // Load recent movies
+            fetch('/api/movies')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('recent-movies');
+                if (data.length === 0) {
+                    container.innerHTML = '<p class="empty-state">No movies available yet.</p>';
+                    return;
+                }
+                
+                data.slice(0, 5).forEach(movie => {
+                    container.innerHTML += `
+                        <div class="movie-card" onclick="window.location.href='/movie.html?id=${movie.id}'">
+                            <img src="${movie.posterUrl}" alt="${movie.title}" class="movie-poster">
+                            <div class="movie-info">
+                                <h3 class="movie-title">${movie.title}</h3>
+                                <div class="movie-meta">
+                                    <span>${movie.year}</span>
+                                    <span>${Math.floor(movie.duration / 60)} min</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }).catch(err => {
+                console.error('Error loading recent movies:', err);
+                document.getElementById('recent-movies').innerHTML = 
+                    '<p class="error-message">Failed to load recent movies.</p>';
+            });
+            
+            // Load user uploads
+            fetch('/api/user/uploads', {
+                headers: {
+                    'x-access-token': token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('user-uploads');
+                if (data.length === 0) {
+                    container.innerHTML = '<p class="empty-state">You haven\'t uploaded any movies yet.</p>';
+                    return;
+                }
+                
+                data.forEach(movie => {
+                    container.innerHTML += `
+                        <div class="movie-card" onclick="window.location.href='/movie.html?id=${movie.id}'">
+                            <img src="${movie.posterUrl}" alt="${movie.title}" class="movie-poster">
+                            <div class="movie-info">
+                                <h3 class="movie-title">${movie.title}</h3>
+                                <div class="movie-meta">
+                                    <span>${movie.year}</span>
+                                    <span>${Math.floor(movie.duration / 60)} min</span>
+                                    <span>${movie.views} views</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }).catch(err => {
+                console.error('Error loading user uploads:', err);
+                document.getElementById('user-uploads').innerHTML = 
+                    '<p class="error-message">Failed to load your uploads.</p>';
+            });
+        });
+    </script>
+</body>
+</html>

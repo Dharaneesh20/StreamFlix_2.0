@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie - StreamFlix</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dark-theme movie-page">
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <img src="/static/img/logo.png" alt="StreamFlix Logo">
+                    <h1>StreamFlix</h1>
+                </div>
+                <div id="nav-links">
+                    <a href="/index.html">Home</a>
+                    <a href="/favorites.html">Favorites</a>
+                    <a href="/upload.html">Upload</a>
+                </div>
+                <div class="user-section" id="user-section">
+                    <span id="user-name"></span>
+                    <div class="dropdown">
+                        <button class="dropdown-btn">Menu</button>
+                        <div class="dropdown-content">
+                            <a href="/profile.html">Profile</a>
+                            <a href="#" id="logout-btn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Video Player -->
+            <section class="video-container">
+                <video id="video-player" poster="/static/img/loading.jpg" controls></video>
+                <div class="player-controls">
+                    <div class="control-group">
+                        <button class="control-btn" id="play-pause-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M8 5v14l11-7z"/>
+                            </svg>
+                        </button>
+                        <div class="progress-container" id="progress-container">
+                            <div class="progress" id="progress"></div>
+                        </div>
+                        <span class="time-display" id="time-display">00:00 / 00:00</span>
+                        <button class="control-btn" id="fullscreen-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Movie Details -->
+            <section class="movie-details">
+                <h1 id="movie-title" class="movie-title">Loading...</h1>
+                <div class="movie-meta">
+                    <span id="movie-year"></span>
+                    <span id="movie-duration"></span>
+                    <span id="movie-genre"></span>
+                    <span id="movie-views"></span>
+                </div>
+                <p class="movie-description" id="movie-description"></p>
+                <div class="uploader-info">
+                    <p>Uploaded by: <span id="movie-uploader"></span></p>
+                    <p>Upload date: <span id="movie-upload-date"></span></p>
+                </div>
+                <button id="favorite-btn" class="btn btn-primary">Add to Favorites</button>
+            </section>
+
+            <!-- Recommendations -->
+            <section class="recommendations">
+                <h2 class="section-title">You might also like</h2>
+                <div id="recommended-movies" class="movies-grid"></div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 StreamFlix. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/redirect.js"></script>
+    <script src="/static/js/player.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const videoPlayer = document.getElementById('video-player');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const progressBar = document.getElementById('progress');
+            const progressContainer = document.getElementById('progress-container');
+            const timeDisplay = document.getElementById('time-display');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            
+            // Add event to listen for player loading errors
+            videoPlayer.addEventListener('error', (e) => {
+                console.error('Video error:', videoPlayer.error);
+                alert('Error loading video: ' + (videoPlayer.error ? videoPlayer.error.message : 'Unknown error'));
+            });
+            
+            // Custom player controls
+            playPauseBtn.addEventListener('click', () => {
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                    playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                } else {
+                    videoPlayer.pause();
+                    playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+                }
+            });
+            
+            videoPlayer.addEventListener('timeupdate', () => {
+                if (videoPlayer.duration) {
+                    const percent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+                    progressBar.style.width = `${percent}%`;
+                    
+                    // Update time display
+                    const currentTime = formatTime(videoPlayer.currentTime);
+                    const duration = formatTime(videoPlayer.duration);
+                    timeDisplay.textContent = `${currentTime} / ${duration}`;
+                }
+            });
+            
+            progressContainer.addEventListener('click', (e) => {
+                const rect = progressContainer.getBoundingClientRect();
+                const pos = (e.clientX - rect.left) / rect.width;
+                videoPlayer.currentTime = pos * videoPlayer.duration;
+            });
+            
+            fullscreenBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    if (videoPlayer.requestFullscreen) {
+                        videoPlayer.requestFullscreen();
+                    } else if (videoPlayer.webkitRequestFullscreen) {
+                        videoPlayer.webkitRequestFullscreen();
+                    } else if (videoPlayer.msRequestFullscreen) {
+                        videoPlayer.msRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+            });
+            
+            // Show controls when hovering over video
+            const playerControls = document.querySelector('.player-controls');
+            videoPlayer.addEventListener('mouseover', () => {
+                playerControls.style.opacity = '1';
+            });
+            
+            videoPlayer.addEventListener('mouseout', () => {
+                if (!videoPlayer.paused) {
+                    setTimeout(() => {
+                        playerControls.style.opacity = '0';
+                    }, 2000);
+                }
+            });
+            
+            // Hide controls after a few seconds of inactivity
+            let timeout;
+            videoPlayer.addEventListener('mousemove', () => {
+                playerControls.style.opacity = '1';
+                clearTimeout(timeout);
+                if (!videoPlayer.paused) {
+                    timeout = setTimeout(() => {
+                        playerControls.style.opacity = '0';
+                    }, 3000);
+                }
+            });
+            
+            // Format time to MM:SS
+            function formatTime(seconds) {
+                const min = Math.floor(seconds / 60);
+                const sec = Math.floor(seconds % 60);
+                return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+            }
+            
+            // Add keypress events for player controls
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    if (videoPlayer.paused) {
+                        videoPlayer.play();
+                        playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                    } else {
+                        videoPlayer.pause();
+                        playPauseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+                    }
+                    e.preventDefault();
+                } else if (e.code === 'ArrowRight') {
+                    videoPlayer.currentTime += 10;
+                    e.preventDefault();
+                } else if (e.code === 'ArrowLeft') {
+                    videoPlayer.currentTime -= 10;
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
