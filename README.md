@@ -6,7 +6,6 @@ A Netflix-inspired video streaming platform built with Python Flask and vanilla 
 ## ✨ Features
 
 - **🎥 Video Streaming**
-  - Adaptive bitrate streaming (2160p to 480p)
   - YouTube-style player controls
   - Quality selection during playback
 - **🔐 Authentication**
@@ -30,8 +29,8 @@ A Netflix-inspired video streaming platform built with Python Flask and vanilla 
 ## 🛠 Technologies
 
 **Backend**
-- Python Flask
-- SQLite Database
+- Django
+- Mongo DB
 - FFmpeg (video processing)
 - JWT Authentication
 - RESTful API
@@ -46,64 +45,28 @@ A Netflix-inspired video streaming platform built with Python Flask and vanilla 
 
 ### Prerequisites
 - Python 3.8+
+- Mongo Shell
+- Mongo Server
+- Mongo DB Compass GUI
+- Django
 - FFmpeg (system-wide access)
 - Modern web browser
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/streamflix.git
-cd streamflix
+git clone https://github.com/Dharaneesh20/StreamFlix_2.0
+cd Stream_Flix
 
 # Install dependencies
-pip install flask flask-cors werkzeug pyjwt cryptography
+pip install -r requirements.txt
+
+# Create Super User
+python manage.py createsuperuser
 
 # Initialize database (automatically created on first run)
-python app.py
+python manage.py runserver
 ```
-
-⚙ Configuration
    
-Edit app.py: 
-```bash
-app.config.update({
-    'SECRET_KEY': 'your-secret-key-here',
-    'UPLOAD_FOLDER': './movies',
-    'MAX_CONTENT_LENGTH': 5 * 1024 * 1024 * 1024  # 5GB limit
-})
-```
-
-📂 Project Structure
-```bash
-streamflix/
-├── static/
-│   ├── css/          # Global styles
-│   ├── js/           # Auth, player, main scripts
-│   └── img/          # Logos & static images
-├── templates/        # HTML pages
-│   ├── index.html
-│   ├── movie.html
-│   ├── dashboard.html
-│   └── ...other pages
-├── movies/           # Uploaded media storage
-├── database/         # SQLite database
-├── app.py            # Main application
-└── schema.sql        # DB schema
-```
-
-🌐 API Endpoints
-```
-Endpoint	Method	Description
-/api/register-POST	User registration
-/api/login-POST	User authentication
-/api/movies-GET	List all movies
-/api/movies/{id}-GET	Get movie details
-/api/upload	POST-Upload new movie
-/api/stream/{id}-GET	Stream video content
-/api/favorites-POST	Add/remove favorites
-/api/watch-history-POST	Update viewing progress
-/api/search	GET-Search movies
-```
-
 ### 🖥 Usage
 #### 1.Registration
 
@@ -130,7 +93,7 @@ Endpoint	Method	Description
 ### 🧪 Testing
 ```bash
 # Run development server
-python app.py
+python manage.py runserver
 
 # Access in browser at:
 http://localhost:5000
@@ -139,7 +102,9 @@ http://localhost:5000
 MIT License - See LICENSE for details
 
 ## 🙏 Acknowledgments
-> ### Flask development team
+> ### Django development team
+
+> ### Mongo DB development team
 
 > ### FFmpeg contributors
 
